@@ -34,10 +34,13 @@ module.exports = function(grunt) {
 		options: {
 			servers: {
 			  	testing: {
-					type: 'sftp',
-					address: "localhost",
+					type: 'sftp', // Only SFTP supported now
+					address: "localhost", 
+					port:22,
 					user:"root",
 					password:"",
+					private_key:"", // Path to key file
+					private_key_passphrase:"", // Passphrase for private key
 					working_path: "/home/node/deployTest",
 					run_path: "/home/node/deployTest/current"
 			  	},

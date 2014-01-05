@@ -20,17 +20,21 @@ module.exports = function(grunt) {
 			throw new TypeError('Please pass a target to deploy to with --target');
 			return;
 		}
+
+		var defaults = {};
+		defaults[this.target] = {
+			address: "localhost",
+			port:22,
+			password:""
+		};
 		
-		this.options = this.options({
-			punctuation: '.',
-			separator: ', '
-		});
+		this.options = this.options(defaults);
 		this.currentServer = this.options.servers[this.target];
 		var path = require('path');
 		this.lastFolder = path.resolve().split("/");
 		this.lastFolder = this.lastFolder[this.lastFolder.length-1];
 		console.log(this.lastFolder);
-		switch (this.options.servers[this.target].type) {
+		switch (this.currentServer.type) {
 			case "sftp":
 				checkSetup(this);
 				deployToSSH(this);
@@ -110,13 +114,23 @@ module.exports = function(grunt) {
 				c.on('error', function(err) {
 					console.log('Connection :: error :: ' + err);
 				});
-				c.connect({
-					host: '192.168.0.100',
-					port: 22,
-					username: 'root',
-					password: 'reverse',
-					//privateKey: require('fs').readFileSync('/here/is/my/key')
-				});
+
+				var connectionObj = {
+					host: self.currentServer.address,
+					port: self.currentServer.port,
+					username: self.currentServer.user,
+				};
+
+				if (self.currentServer.privateKey) {
+					connectionObj.privateKey = require('fs').readFileSync(self.currentServer.private_key);
+					if (self.currentServer.private_key_passphrase) {
+						connectionObj.passphrase = self.currentServer.private_key_passphrase;
+					}
+				}
+				else {
+					connectionObj.password = self.currentServer.password;
+				}
+				c.connect(connectionObj);
 			});
 		}
 	});

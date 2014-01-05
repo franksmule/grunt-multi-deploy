@@ -1,6 +1,8 @@
 grunt-multi-deploy
 ==================
 
+---> Does not work yet! <---
+
 A deployment script that will support multiple deployment methods and languages.
 
 I am aiming for this to be a replacement for Capistrano.
