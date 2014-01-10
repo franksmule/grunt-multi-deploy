@@ -17,7 +17,7 @@ SFTP - In Progress
 
 FTP
 
-GIT
+GIT - In Progress
 
 
 TODO
