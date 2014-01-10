@@ -42,7 +42,10 @@ module.exports = function(grunt) {
 					private_key:"", // Path to key file
 					private_key_passphrase:"", // Passphrase for private key
 					working_path: "/home/node/deployTest",
-					run_path: "/home/node/deployTest/current"
+					run_path: "/home/node/deployTest/current",
+					git_directory:  "/home/node/deployTest/git",
+					git_repo: "git://github.com/schacon/simplegit.git",
+					git_branch: "master",
 			  	},
 		  	},
 		  	// Folders to ignore, won't be transferred to remote server. Regex.

@@ -39,7 +39,9 @@ module.exports = function(grunt) {
 				checkSetup(this);
 				deployToSSH(this);
 				break;
-
+			case "git":
+				deployGit(this);
+				break;
 		}
 
 		function checkSetup(self) {
@@ -65,6 +67,73 @@ module.exports = function(grunt) {
 				})).on("close", function () {
 			 	console.error("Done tar");
 			 	callback("deploy.tar");
+			});
+		}
+
+		function setupSSHConnection(self, callback) {
+			var Connection = require('ssh2');
+			var c = new Connection();
+			c.on('ready', callback);
+
+			c.on('error', function(err) {
+				console.log('Connection :: error :: ' + err);
+			});
+
+			var connectionObj = {
+				host: self.currentServer.address,
+				port: self.currentServer.port,
+				username: self.currentServer.user,
+			};
+			if (self.currentServer.privateKey) {
+				connectionObj.privateKey = require('fs').readFileSync(self.currentServer.private_key);
+				if (self.currentServer.private_key_passphrase) {
+					connectionObj.passphrase = self.currentServer.private_key_passphrase;
+				}
+			}
+			else {
+				connectionObj.password = self.currentServer.password;
+			}
+			c.connect(connectionObj);
+		}
+
+		function checkGitStatus(self, callback) {
+			c.exec('cd  ' + self.currentServer.git_directory + ' && git status -s', function(err, stream) {
+				// todo: Check if git is ok
+				setupGitRepo(self, callback);
+				// Its ok update it.
+				updateGitRepo(callback);
+			});
+		}
+
+		function setupGitRepo(self, callback) {
+			c.exec('cd  ' + self.currentServer.git_directory + ' &&  git clone ' . self.currentServer.git_repo, function(err, stream) {
+				callback();
+			});
+		}
+
+		function updateGitRepo(self, callback) {
+			c.exec('cd  ' + self.currentServer.git_directory + ' &&  git pull', function(err, stream) {
+				callback(callback);
+			});
+		}
+
+		function deployGit(self) {
+			setupSSHConnection(self, function() {
+				checkGitStatus(self, function() {
+					c.exec('mkdir -p ' + self.currentServer.working_path + ' && ' + 'mkdir -p ' + self.currentServer.working_path + "/" + timeStamp, function(err, stream) {
+						c.sftp(function(err, sftp) {
+							if (err) throw err;
+							sftp.fastPut(path.resolve() + "/" + filename, self.currentServer.working_path + "/deploy.tar", function(err){
+								if (err) throw err;
+								sftp.chmod(self.currentServer.working_path + "/deploy.tar", "0755", function() {
+									sftp.end();
+									console.log("END SFTP");
+									callback(false, false);
+								});
+							});
+						});
+					});
+				});
 			});
 		}
 
